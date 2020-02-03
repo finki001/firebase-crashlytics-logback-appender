@@ -1,0 +1,2 @@
+include ':app', ':firebase-crashlytics-logback-appender'
+rootProject.name='FirebaseCrashlyticsLogbackAppender'
