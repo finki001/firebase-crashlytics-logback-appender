@@ -1,6 +1,17 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "digital.wup:android-maven-publish:3.6.2"
+    }
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: "digital.wup.android-maven-publish"
+
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
@@ -10,7 +21,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0"
+        versionName "0.0.1_${lastCommitHash()}"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
@@ -18,8 +29,6 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -34,9 +43,36 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics:17.0.0-beta01'
     implementation "org.slf4j:slf4j-api:1.7.29"
     implementation "com.github.tony19:logback-android:2.0.0"
+}
 
+task sourceJar(type: Jar) {
+    classifier "sources"
+    from android.sourceSets.main.java.srcDirs
+}
 
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+publishing {
+    publications {
+        mavenAar(MavenPublication) {
+            groupId "eu.finki"
+            artifactId "firebase-crashlytics-logback-appender"
+            version "${android.defaultConfig.versionName}"
+            from components.android
+            artifact sourceJar
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username nexusTroiiNetUser
+                password nexusTroiiNetPassword
+            }
+            url "https://nexus.troii.net/content/repositories/releases/"
+        }
+    }
+}
+
+def lastCommitHash() {
+    def proc = "git rev-parse --short HEAD".execute([], projectDir)
+    proc.waitFor()
+    return "${proc.in.text}".trim()
 }
